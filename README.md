@@ -127,8 +127,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - Inspired by [Meta Pixel Helper](https://chrome.google.com/webstore/detail/meta-pixel-helper) and [TikTok Pixel Helper](https://chrome.google.com/webstore/detail/tiktok-pixel-helper)
-- Built with ❤️ by P2P Digital Team
-
----
-
-**Made with Google Antigravity AI** 🚀
+- Built with ❤️ by nguyenvanhao.name.vn
