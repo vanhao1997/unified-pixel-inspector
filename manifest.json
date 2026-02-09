@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Unified Pixel Inspector",
-    "description": "Detect and debug tracking pixels/tags across Meta, TikTok, Google/GTM, Zalo, LinkedIn",
+    "description": "Detect and debug tracking pixels/tags across Meta, TikTok, Google/GTM, and Zalo on any website",
     "version": "1.0.0",
     "author": "Google Antigravity (P2P Digital)",
     "icons": {
