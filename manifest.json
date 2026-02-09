@@ -3,7 +3,9 @@
     "name": "Unified Pixel Inspector",
     "description": "Detect and debug tracking pixels/tags across Meta, TikTok, Google/GTM, and Zalo on any website",
     "version": "1.0.0",
-    "author": "Google Antigravity (P2P Digital)",
+    "author": "P2P Digital",
+    "homepage_url": "https://github.com/vanhao1997/unified-pixel-inspector",
+    "minimum_chrome_version": "116",
     "icons": {
         "16": "icons/icon16.png",
         "48": "icons/icon48.png",
@@ -11,9 +13,9 @@
     },
     "permissions": [
         "activeTab",
-        "scripting",
         "storage",
         "sidePanel",
+        "scripting",
         "webRequest"
     ],
     "host_permissions": [

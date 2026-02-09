@@ -1,0 +1,16 @@
+# Build artifacts
+*.zip
+
+# Store assets (generated images)
+store_assets/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+
+# Logs
+*.log
