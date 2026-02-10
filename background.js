@@ -57,6 +57,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
             sendResponse({ capturing: sess?.capturing });
             return true;
+
+        case 'START_ELEMENT_PICKER':
+            // Inject element picker into the active tab
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                if (tabs[0]) {
+                    chrome.scripting.executeScript({
+                        target: { tabId: tabs[0].id },
+                        files: ['content/elementPicker.js']
+                    }).then(() => {
+                        sendResponse({ success: true });
+                    }).catch(err => {
+                        sendResponse({ success: false, error: err.message });
+                    });
+                }
+            });
+            return true;
+
+        case 'ELEMENT_PICKED':
+            // Forward picked element info to the side panel
+            chrome.runtime.sendMessage({
+                type: 'ELEMENT_PICKED_RESULT',
+                data: message.data
+            });
+            break;
+
+        case 'ELEMENT_PICKER_CANCELLED':
+            chrome.runtime.sendMessage({
+                type: 'ELEMENT_PICKER_CANCELLED_RESULT'
+            });
+            break;
     }
 });
 

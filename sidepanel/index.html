@@ -58,6 +58,19 @@
         </svg>
         Timeline
       </button>
+      <button class="tab" data-tab="setup">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 18l2-2v-3" />
+          <path d="M8 6H6l-2 2" />
+          <path d="M18 6h-4V2" />
+          <path d="m14 2 4 4" />
+          <path d="M6 22V8" />
+          <path d="M18 14v8" />
+          <path d="M6 13h4" />
+          <path d="M14 18h4" />
+        </svg>
+        Setup
+      </button>
       <button class="tab" data-tab="settings">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3" />
@@ -135,8 +148,336 @@
         </div>
       </section>
 
+      <!-- Setup Tab -->
+      <section id="setupTab" class="tab-content">
+        <div class="setup-wizard">
+          <!-- Step 1: Select Action -->
+          <div class="setup-step">
+            <h3>
+              <span class="step-number">1</span>
+              Select Action
+            </h3>
+            <div class="action-grid" id="actionGrid">
+              <!-- Will be populated by JS -->
+            </div>
+
+            <!-- Action Name (shown after selection) -->
+            <div id="actionNamePanel" class="action-name-panel" style="display: none;">
+              <div class="form-group">
+                <label for="actionName">📌 Tên action (tuỳ chọn)</label>
+                <input type="text" id="actionName" placeholder="VD: Click nút Mua Ngay, Form Đăng ký tư vấn...">
+              </div>
+            </div>
+
+            <!-- Interaction Config (shown for interaction events) -->
+            <div id="interactionConfig" class="interaction-config" style="display: none;">
+              <h4 id="interactionConfigTitle">⚙️ Cấu hình chi tiết</h4>
+              <div class="form-group">
+                <label for="interactionTarget">🎯 Mục tiêu cụ thể</label>
+                <input type="text" id="interactionTarget" placeholder="">
+              </div>
+              <div class="form-group">
+                <label>CSS Selector</label>
+                <div class="selector-input-group">
+                  <input type="text" id="interactionSelector" placeholder="Hoặc click nút bên dưới để chọn">
+                  <button type="button" id="pickElementBtn" class="btn btn-accent btn-sm"
+                    title="Chọn element trên trang">
+                    🎯 Chọn element
+                  </button>
+                </div>
+                <span class="input-hint" id="selectorHint">Click "Chọn element" rồi rê chuột vào element trên
+                  trang</span>
+                <!-- Picked element result display -->
+                <div id="pickedElementInfo" class="picked-element-info" style="display: none;">
+                  <div class="picked-element-tag" id="pickedTag"></div>
+                  <div class="picked-element-text" id="pickedText"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Enter Parameters -->
+          <div class="setup-step" id="paramsStep" style="display: none;">
+            <h3>
+              <span class="step-number">2</span>
+              Enter Parameters
+            </h3>
+            <div class="params-form" id="paramsForm">
+              <div class="form-group">
+                <label for="paramValue">Value *</label>
+                <input type="number" id="paramValue" placeholder="150000">
+              </div>
+              <div class="form-group">
+                <label for="paramCurrency">Currency *</label>
+                <select id="paramCurrency">
+                  <option value="VND">VND - Vietnamese Dong</option>
+                  <option value="USD">USD - US Dollar</option>
+                  <option value="EUR">EUR - Euro</option>
+                  <option value="GBP">GBP - British Pound</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Products</label>
+                <div id="productsList" class="products-list">
+                  <div class="product-item">
+                    <input type="text" placeholder="Product ID" class="product-id">
+                    <input type="text" placeholder="Product Name" class="product-name">
+                    <input type="number" placeholder="Price" class="product-price">
+                    <input type="number" placeholder="Qty" value="1" class="product-qty">
+                    <button type="button" class="btn-remove-product">&times;</button>
+                  </div>
+                </div>
+                <button type="button" id="addProductBtn" class="btn btn-secondary btn-sm">+ Add Product</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Select Platforms -->
+          <div class="setup-step" id="platformsStep" style="display: none;">
+            <h3>
+              <span class="step-number">3</span>
+              Select Platforms
+              <button id="autoDetectBtn" class="btn btn-secondary btn-sm" title="Auto-detect from current page">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+                Auto-detect
+              </button>
+            </h3>
+            <div class="platform-checkboxes">
+              <label class="platform-checkbox disabled-checked">
+                <input type="checkbox" id="setupGa4" checked disabled>
+                <span class="platform-label ga4">Google Analytics 4 (G-XXXXXXXXXX)</span>
+              </label>
+              <input type="text" id="setupGa4Id" placeholder="Measurement ID (G-XXXXXXXXXX)"
+                class="pixel-id-input full-width">
+            </div>
+            <button id="generateCodeBtn" class="btn btn-primary btn-block">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 18l2-2v-3" />
+                <path d="M8 6H6l-2 2" />
+                <polyline points="7 8 12 3 17 8" />
+                <polyline points="17 16 12 21 7 16" />
+              </svg>
+              Generate Code
+            </button>
+          </div>
+
+          <!-- Generated Code Output -->
+          <div class="setup-step" id="codeOutputStep" style="display: none;">
+            <h3>
+              <span class="step-number">4</span>
+              Generated Code
+            </h3>
+            <div class="code-output-wrapper">
+              <!-- GTM Code (Default) -->
+              <div id="gtmCodePanel" class="code-panel">
+                <pre id="generatedGTMCode" class="code-output"></pre>
+              </div>
+
+              <!-- GTM Deploy Result (Result shown here after deploy) -->
+              <div id="gtmDeployResult" class="gtm-deploy-result" style="display: none;"></div>
+
+              <div class="code-actions">
+                <button id="copyAllCode" class="btn btn-primary">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                  Copy Code
+                </button>
+                <button id="deployToGTM" class="btn btn-gtm-deploy" style="display: none;">
+                  🚀 Deploy to GTM
+                </button>
+                <button id="configureGTM" class="btn btn-secondary" style="display: none;"
+                  title="Cấu hình GTM trong Settings">
+                  ⚙️ Setup GTM
+                </button>
+                <button id="resetSetup" class="btn btn-secondary">Reset</button>
+              </div>
+
+              <!-- Setup Guide -->
+              <details id="setupGuideDetails" class="setup-guide-accordion">
+                <summary class="setup-guide-header">
+                  📖 Hướng dẫn cài đặt chi tiết
+                </summary>
+                <div class="setup-guide-content">
+
+                  <!-- Direct Guide -->
+                  <div id="directGuide">
+                    <h4>🔧 Option A: Dán trực tiếp vào website</h4>
+                    <div class="guide-section">
+                      <h5>Bước 1: Copy code</h5>
+                      <p>Nhấn <strong>Copy Code</strong> ở tab "Direct"</p>
+                    </div>
+                    <div class="guide-section">
+                      <h5>Bước 2: Paste vào website</h5>
+                      <ol>
+                        <li>Mở file HTML / CMS editor của website</li>
+                        <li>Tìm vị trí cần tracking (trang thanh toán, nút Mua hàng...)</li>
+                        <li>Wrap code trong <code>&lt;script&gt;...&lt;/script&gt;</code></li>
+                        <li>Đảm bảo base pixel code đã được load trước đó</li>
+                      </ol>
+                    </div>
+                  </div>
+
+                  <!-- GTM Guide -->
+                  <div id="gtmGuide">
+                    <h4>🏷️ Option B: Google Tag Manager</h4>
+
+                    <div class="guide-section">
+                      <h5>📋 Bước 1: Mở GTM Container</h5>
+                      <ol>
+                        <li>Truy cập <a href="https://tagmanager.google.com" target="_blank"
+                            rel="noopener">tagmanager.google.com</a></li>
+                        <li>Chọn Container của website</li>
+                      </ol>
+                    </div>
+
+                    <div class="guide-section">
+                      <h5>🏷️ Bước 2: Tạo Tag cho từng platform</h5>
+                      <div class="gtm-platform-guide">
+                        <div class="gtm-tag-card meta-border">
+                          <div class="gtm-tag-header">🔵 Meta Pixel</div>
+                          <ol>
+                            <li>Tags → New → <strong>Custom HTML</strong></li>
+                            <li>Paste code Meta từ tab GTM (đã có sẵn <code>&lt;script&gt;</code>)</li>
+                            <li>Đặt tên: <em>"Meta - [Event Name]"</em></li>
+                          </ol>
+                          <div class="gtm-tag-note">⚠️ Cần đã có tag "Meta Pixel Base Code" chạy
+                            <code>fbq('init')</code> trên All Pages
+                          </div>
+                        </div>
+
+                        <div class="gtm-tag-card tiktok-border">
+                          <div class="gtm-tag-header">⚫ TikTok Pixel</div>
+                          <ol>
+                            <li>Tags → New → <strong>Custom HTML</strong></li>
+                            <li>Paste code TikTok từ tab GTM</li>
+                            <li>Đặt tên: <em>"TikTok - [Event Name]"</em></li>
+                          </ol>
+                          <div class="gtm-tag-note">⚠️ Cần đã có tag "TikTok Pixel Base Code" chạy trên All Pages</div>
+                        </div>
+
+                        <div class="gtm-tag-card ga4-border">
+                          <div class="gtm-tag-header">🟢 Google Analytics 4</div>
+                          <div class="gtm-tag-important">
+                            ⚠️ <strong>KHÔNG dùng Custom HTML!</strong> Hãy dùng GA4 Event tag:
+                          </div>
+                          <ol>
+                            <li>Tags → New → <strong>Google Analytics: GA4 Event</strong></li>
+                            <li>Chọn Configuration Tag (hoặc nhập Measurement ID)</li>
+                            <li>Event Name: <code id="gtmGA4EventName">event_name</code></li>
+                            <li>Thêm Event Parameters từ code (nếu có)</li>
+                          </ol>
+                          <div class="gtm-tag-note">
+                            Nếu muốn dùng <code>dataLayer.push</code>: Tạo tag Custom HTML chứa code dataLayer, rồi tạo
+                            GA4 Event tag với trigger = Custom Event cùng tên
+                          </div>
+                        </div>
+
+                        <div class="gtm-tag-card zalo-border">
+                          <div class="gtm-tag-header">🔵 Zalo Pixel</div>
+                          <ol>
+                            <li>Tags → New → <strong>Custom HTML</strong></li>
+                            <li>Paste code Zalo từ tab GTM</li>
+                            <li>Đặt tên: <em>"Zalo - [Event Name]"</em></li>
+                          </ol>
+                          <div class="gtm-tag-note">⚠️ Cần đã có tag "Zalo Pixel Base Code" chạy trên All Pages</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="guide-section">
+                      <h5>⚡ Bước 3: Thiết lập Trigger</h5>
+                      <div id="gtmTriggerGuide" class="trigger-recommendation">
+                        <!-- Populated by JS based on selected action -->
+                      </div>
+                    </div>
+
+                    <div class="guide-section">
+                      <h5>✅ Bước 4: Publish</h5>
+                      <ol>
+                        <li>Nhấn <strong>Preview</strong> → kiểm tra trên website</li>
+                        <li>Xác nhận tag đã fire đúng trigger</li>
+                        <li>Nhấn <strong>Submit</strong> → đặt tên version → Publish</li>
+                      </ol>
+                    </div>
+                  </div>
+
+                  <!-- Verification -->
+                  <div class="guide-section">
+                    <h5>🔍 Kiểm tra sau cài đặt</h5>
+                    <p>Quay lại tab <strong>Scan</strong> của Pixel Inspector để verify events đã fire đúng!</p>
+                  </div>
+
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Settings Tab -->
       <section id="settingsTab" class="tab-content">
+        <div class="settings-group">
+          <h3>Google Tag Manager Connection</h3>
+          <div class="gtm-deploy-section">
+            <!-- GTM Connection Bar -->
+            <div id="gtmConnectionBar" class="gtm-connection-bar">
+              <div class="gtm-connection-info">
+                <div class="gtm-connection-status">
+                  <span id="gtmStatusIcon" class="gtm-status-icon disconnected">●</span>
+                  <span id="gtmStatusText" class="gtm-status-text">Chưa kết nối GTM</span>
+                </div>
+                <span id="gtmUserEmail" class="gtm-user-email" style="display: none;"></span>
+              </div>
+              <button id="gtmConnectBtn" class="btn btn-sm btn-gtm" title="Kết nối Google Tag Manager">
+                🔗 Kết nối GTM
+              </button>
+            </div>
+
+            <!-- Onboarding Tooltip (shown when not connected) -->
+            <div id="gtmOnboarding" class="gtm-onboarding">
+              <div class="gtm-onboarding-text">
+                💡 <strong>Deploy tự động!</strong> Kết nối GTM để tạo Tags & Triggers trực tiếp.
+              </div>
+              <a href="https://tagmanager.google.com" target="_blank" class="gtm-help-link">Chưa có GTM? Tạo miễn phí
+                →</a>
+            </div>
+
+            <!-- GTM Container Selector (hidden until connected) -->
+            <div id="gtmContainerSelector" class="gtm-container-selector" style="display: none;">
+              <div class="gtm-selector-row">
+                <label>Account:</label>
+                <select id="gtmAccountSelect" class="gtm-select">
+                  <option value="">-- Chọn Account --</option>
+                </select>
+              </div>
+              <div class="gtm-selector-row">
+                <label>Container:</label>
+                <select id="gtmContainerSelect" class="gtm-select" disabled>
+                  <option value="">-- Chọn Container --</option>
+                </select>
+              </div>
+              <div class="gtm-selector-row">
+                <label>Workspace:</label>
+                <select id="gtmWorkspaceSelect" class="gtm-select" disabled>
+                  <option value="">-- Chọn Workspace --</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- No GTM Account Message (hidden by default) -->
+            <div id="gtmNoAccount" class="gtm-no-account" style="display: none;">
+              <p>😕 Tài khoản Google này chưa có GTM.</p>
+              <a href="https://tagmanager.google.com" target="_blank" class="btn btn-sm btn-gtm">
+                ✨ Tạo GTM Account miễn phí
+              </a>
+            </div>
+          </div>
+        </div>
         <div class="settings-group">
           <h3>Appearance</h3>
           <div class="theme-selector">
@@ -202,6 +543,10 @@
     </footer>
   </div>
 
+  <script src="../lib/eventMapping.js"></script>
+  <script src="../lib/codeGenerator.js"></script>
+  <script src="../lib/gtmClient.js"></script>
+  <script src="../lib/gtmTagBuilder.js"></script>
   <script src="app.js"></script>
 </body>
 

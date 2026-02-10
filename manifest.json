@@ -16,11 +16,19 @@
         "storage",
         "sidePanel",
         "scripting",
-        "webRequest"
+        "webRequest",
+        "identity"
     ],
     "host_permissions": [
         "<all_urls>"
     ],
+    "oauth2": {
+        "client_id": "300780848365-ibnait1kqtioiup6dtg27fs4ptkje5i2.apps.googleusercontent.com",
+        "scopes": [
+            "https://www.googleapis.com/auth/tagmanager.edit.containers",
+            "email"
+        ]
+    },
     "background": {
         "service_worker": "background.js",
         "type": "module"
