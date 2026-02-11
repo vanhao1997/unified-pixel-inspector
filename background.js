@@ -1,20 +1,7 @@
+import { SessionStore } from './lib/sessionStore.js';
+
 // Background Service Worker - Unified Pixel Inspector
-// Manages session per tab, badge count, message routing
-
-const tabSessions = new Map();
-
-// Initialize session for a tab
-function initSession(tabId) {
-    if (!tabSessions.has(tabId)) {
-        tabSessions.set(tabId, {
-            platforms: {},
-            events: [],
-            capturing: true,
-            startTime: Date.now()
-        });
-    }
-    return tabSessions.get(tabId);
-}
+// Manages session per tab using SessionStore (chrome.storage.session)
 
 // Update badge with issue count
 function updateBadge(tabId, count) {
@@ -25,50 +12,69 @@ function updateBadge(tabId, count) {
     chrome.action.setBadgeBackgroundColor({ color, tabId });
 }
 
+// Clear session on extension reload/install
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.storage.session.clear();
+});
+
 // Handle messages from content scripts and side panel
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const tabId = sender.tab?.id || message.tabId;
 
     switch (message.type) {
         case 'PIXEL_DETECTED':
-            handlePixelDetected(tabId, message.data);
+            if (tabId) handlePixelDetected(tabId, message.data);
             break;
 
         case 'EVENT_CAPTURED':
-            handleEventCaptured(tabId, message.data);
+            if (tabId) handleEventCaptured(tabId, message.data);
             break;
 
         case 'GET_SESSION':
-            const session = tabSessions.get(tabId) || initSession(tabId);
-            sendResponse(session);
-            return true;
+            if (tabId) {
+                // Get or Init session
+                SessionStore.update(tabId, (s) => s).then(session => {
+                    sendResponse(session);
+                });
+                return true; // Async response
+            }
+            break;
 
         case 'CLEAR_SESSION':
-            tabSessions.delete(tabId);
-            initSession(tabId);
-            updateBadge(tabId, 0);
-            sendResponse({ success: true });
-            return true;
+            if (tabId) {
+                SessionStore.remove(tabId).then(() => {
+                    return SessionStore.update(tabId, (s) => s); // Re-init
+                }).then(() => {
+                    updateBadge(tabId, 0);
+                    sendResponse({ success: true });
+                });
+                return true;
+            }
+            break;
 
         case 'TOGGLE_CAPTURE':
-            const sess = tabSessions.get(tabId);
-            if (sess) {
-                sess.capturing = message.capturing;
+            if (tabId) {
+                SessionStore.update(tabId, (s) => {
+                    s.capturing = message.capturing;
+                }).then(session => {
+                    sendResponse({ capturing: session.capturing });
+                });
+                return true;
             }
-            sendResponse({ capturing: sess?.capturing });
-            return true;
+            break;
 
         case 'START_ELEMENT_PICKER':
-            // Inject element picker into the active tab
+            // Send activation message to the active tab
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                 if (tabs[0]) {
-                    chrome.scripting.executeScript({
-                        target: { tabId: tabs[0].id },
-                        files: ['content/elementPicker.js']
+                    chrome.tabs.sendMessage(tabs[0].id, {
+                        type: 'ACTIVATE_ELEMENT_PICKER'
                     }).then(() => {
                         sendResponse({ success: true });
                     }).catch(err => {
-                        sendResponse({ success: false, error: err.message });
+                        // If content script is not injected yet or navigation happened
+                        console.error('Failed to activate picker:', err);
+                        sendResponse({ success: false, error: 'Could not activate picker. Refresh page and try again.' });
                     });
                 }
             });
@@ -79,71 +85,72 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             chrome.runtime.sendMessage({
                 type: 'ELEMENT_PICKED_RESULT',
                 data: message.data
-            });
+            }).catch(() => { });
             break;
 
         case 'ELEMENT_PICKER_CANCELLED':
             chrome.runtime.sendMessage({
                 type: 'ELEMENT_PICKER_CANCELLED_RESULT'
-            });
+            }).catch(() => { });
             break;
     }
 });
 
-function handlePixelDetected(tabId, data) {
-    const session = initSession(tabId);
-    const { platform, pixelId, status, source, allPixelIds, tags } = data;
+async function handlePixelDetected(tabId, data) {
+    const { platform, pixelId, status, allPixelIds, tags } = data;
 
-    if (!session.platforms[platform]) {
-        session.platforms[platform] = {
-            pixelIds: [],
-            tags: [],
-            installed: false,
-            loaded: false,
-            fired: false,
-            errors: [],
-            warnings: []
-        };
-    }
+    const session = await SessionStore.update(tabId, (s) => {
+        if (!s.platforms[platform]) {
+            s.platforms[platform] = {
+                pixelIds: [],
+                tags: [],
+                installed: false,
+                loaded: false,
+                fired: false,
+                errors: [],
+                warnings: []
+            };
+        }
 
-    const platformData = session.platforms[platform];
+        const platformData = s.platforms[platform];
 
-    if (pixelId && !platformData.pixelIds.includes(pixelId)) {
-        platformData.pixelIds.push(pixelId);
-    }
+        if (pixelId && !platformData.pixelIds.includes(pixelId)) {
+            platformData.pixelIds.push(pixelId);
+        }
 
-    // Merge all pixel IDs if provided
-    if (allPixelIds && allPixelIds.length > 0) {
-        allPixelIds.forEach(id => {
-            if (!platformData.pixelIds.includes(id)) {
-                platformData.pixelIds.push(id);
-            }
-        });
-    }
-
-    // Merge tags for platforms (Google, TikTok, Zalo)
-    if (tags && tags.length > 0) {
-        tags.forEach(tag => {
-            if (!platformData.tags.some(t => t.id === tag.id)) {
-                platformData.tags.push(tag);
-            }
-        });
-    }
-
-    if (status === 'installed') platformData.installed = true;
-    if (status === 'loaded') platformData.loaded = true;
-    if (status === 'fired') platformData.fired = true;
-
-    // Check for duplicates (skip for Google which can have multiple tags)
-    if (platform !== 'google' && platformData.pixelIds.length > 1) {
-        const existingWarning = platformData.warnings.find(w => w.code === 'DUPLICATE_PIXEL');
-        if (!existingWarning) {
-            platformData.warnings.push({
-                code: 'DUPLICATE_PIXEL',
-                message: `Multiple ${platform} pixel IDs detected: ${platformData.pixelIds.join(', ')}`
+        // Merge all pixel IDs if provided
+        if (allPixelIds && allPixelIds.length > 0) {
+            allPixelIds.forEach(id => {
+                if (!platformData.pixelIds.includes(id)) {
+                    platformData.pixelIds.push(id);
+                }
             });
         }
-    }
+
+        // Merge tags for platforms (Google, TikTok, Zalo)
+        if (tags && tags.length > 0) {
+            tags.forEach(tag => {
+                if (!platformData.tags.some(t => t.id === tag.id)) {
+                    platformData.tags.push(tag);
+                }
+            });
+        }
+
+        if (status === 'installed') platformData.installed = true;
+        if (status === 'loaded') platformData.loaded = true;
+        if (status === 'fired') platformData.fired = true;
+
+        // Check for duplicates (skip for Google which can have multiple tags)
+        if (platform !== 'google' && platformData.pixelIds.length > 1) {
+            const existingWarning = platformData.warnings.find(w => w.code === 'DUPLICATE_PIXEL');
+            if (!existingWarning) {
+                platformData.warnings.push({
+                    code: 'DUPLICATE_PIXEL',
+                    message: `Multiple ${platform} pixel IDs detected: ${platformData.pixelIds.join(', ')}`
+                });
+            }
+        }
+    });
 
     // Update badge
     const issueCount = Object.values(session.platforms)
@@ -151,38 +158,39 @@ function handlePixelDetected(tabId, data) {
     updateBadge(tabId, issueCount);
 
     // Notify side panel
-    chrome.runtime.sendMessage({ type: 'SESSION_UPDATED', tabId, session });
+    chrome.runtime.sendMessage({ type: 'SESSION_UPDATED', tabId, session }).catch(() => { });
 }
 
-function handleEventCaptured(tabId, data) {
-    const session = initSession(tabId);
+async function handleEventCaptured(tabId, data) {
+    const session = await SessionStore.update(tabId, (s) => {
+        if (!s.capturing) return;
 
-    if (!session.capturing) return;
+        s.events.push({
+            ...data,
+            timestamp: Date.now()
+        });
 
-    session.events.push({
-        ...data,
-        timestamp: Date.now()
+        // Mark platform as fired
+        if (s.platforms[data.platform]) {
+            s.platforms[data.platform].fired = true;
+        }
     });
 
-    // Mark platform as fired
-    if (session.platforms[data.platform]) {
-        session.platforms[data.platform].fired = true;
-    }
-
     // Notify side panel
-    chrome.runtime.sendMessage({ type: 'SESSION_UPDATED', tabId, session });
+    chrome.runtime.sendMessage({ type: 'SESSION_UPDATED', tabId, session }).catch(() => { });
 }
 
 // Clean up when tab is closed
 chrome.tabs.onRemoved.addListener((tabId) => {
-    tabSessions.delete(tabId);
+    SessionStore.remove(tabId);
 });
 
 // Re-initialize when tab navigates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
     if (changeInfo.status === 'loading') {
-        tabSessions.delete(tabId);
-        updateBadge(tabId, 0);
+        SessionStore.remove(tabId).then(() => {
+            updateBadge(tabId, 0);
+        });
     }
 });
 
@@ -196,7 +204,7 @@ chrome.webRequest.onCompleted.addListener(
     (details) => {
         const url = details.url;
 
-        // TikTok Pixel - Extract pixel ID and event from URL
+        // TikTok Pixel
         if (/analytics\.tiktok\.com/.test(url)) {
             const pixelIdMatch = url.match(/sdkid=([A-Z0-9]+)/i);
             const eventMatch = url.match(/event=([^&]+)/i);
@@ -209,7 +217,6 @@ chrome.webRequest.onCompleted.addListener(
                 url: url
             });
 
-            // Also capture as event if event parameter exists
             if (eventMatch) {
                 handleEventCaptured(details.tabId, {
                     platform: 'tiktok',
@@ -248,7 +255,6 @@ chrome.webRequest.onCompleted.addListener(
         // Google Analytics / GTM
         if (/google-analytics\.com|googletagmanager\.com|www\.google-analytics\.com/.test(url)) {
             const tidMatch = url.match(/tid=([^&]+)/i) || url.match(/id=([^&]+)/i);
-            const eventMatch = url.match(/en=([^&]+)/i) || url.match(/t=([^&]+)/i);
 
             handlePixelDetected(details.tabId, {
                 platform: 'google',

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Pixel Inspector - Debug Tracking Pixels</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #ec4899;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --accent: #818cf8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            line-height: 1.6;
+            color: #334155;
+            background: var(--light);
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            color: white;
+            padding: 5rem 2rem 8rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: var(--light);
+            transform: skewY(-2deg);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 3.5rem;
+            letter-spacing: -1px;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .hero-desc {
+            font-size: 1.4rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            font-weight: 300;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #fff;
+            color: var(--primary);
+            padding: 16px 32px;
+            border-radius: 99px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        main {
+            max-width: 1000px;
+            margin: -5rem auto 0;
+            padding: 0 2rem 4rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Video Section */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            background: #000;
+            margin-bottom: 4rem;
+            border: 4px solid white;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        h2 {
+            color: var(--dark);
+            font-size: 2.2rem;
+            margin-top: 4rem;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        /* Gallery */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .gallery-item {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            padding: 12px;
+            background: #e0e7ff;
+            border-radius: 12px;
+        }
+
+        .permission-box {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 1rem;
+        }
+
+        .permission-name {
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 4rem;
+            color: #64748b;
+            background: white;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Unified Pixel Inspector</h1>
+        <p class="hero-desc">The ultimate tool to detect, debug, and validate tracking pixels for Meta, TikTok, Google,
+            and Zalo.</p>
+        <a href="#" class="btn">Add to Chrome</a>
+    </header>
+
+    <main>
+        <!-- Video Demo -->
+        <div class="video-container">
+            <iframe src="https://www.youtube.com/embed/CdHnee27KSo?rel=0" title="Unified Pixel Inspector Demo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+        </div>
+
+        <h2>Key Features</h2>
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Multi-Platform Support</h3>
+                <p>Automatically detects Meta Pixel, TikTok Pixel, Google Tags (GA4, GTM, Ads), and Zalo Pixel
+                    simultaneously on any webpage.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Real-time Event Log</h3>
+                <p>View a live feed of firing events with full payload details. See exactly what data (parameters,
+                    values, currency) is being sent to ad networks.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Element Picker</h3>
+                <p>Visual Point-and-click tool to generate robust CSS selectors for any element. Essential for setting
+                    up GTM triggers accurately.</p>
+            </div>
+        </div>
+
+        <h2>Screenshots</h2>
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="assets/Unified Pixel Inspector_01_1280x800.png" alt="Unified Pixel Inspector Dashboard">
+            </div>
+            <div class="gallery-item">
+                <img src="assets/Unified Pixel Inspector_02_1280x800 .png" alt="Event Logging">
+            </div>
+            <div class="gallery-item">
+                <img src="assets/Unified Pixel Inspector_03_1280x800.png" alt="Element Picker">
+            </div>
+            <div class="gallery-item">
+                <img src="assets/Unified Pixel Inspector_04_1280x800.png" alt="Settings Configuration">
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 4rem;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Privacy & Security</h3>
+            <p style="max-width: 600px; margin: 0 auto 1.5rem; color: #64748b;">
+                Unified Pixel Inspector operates entirely within your browser side panel. We do not collect or transmit
+                your browsing data to any external servers.
+            </p>
+            <a href="#privacy" style="font-weight: 600; font-size: 1.1rem;">Read our Privacy Policy below ↓</a>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 4rem 0;">
+
+        <section id="privacy">
+            <h2>Privacy Policy</h2>
+            <p style="text-align: center; color: #64748b; margin-bottom: 2rem;">Last updated: February 11, 2026</p>
+
+            <p>Unified Pixel Inspector ("the Extension") collects and uses data strictly for the purpose of helping you
+                debug and validate tracking pixel implementations. We do not sell your data or transmit your browsing
+                activity to third parties.</p>
+
+            <h3>Data Collection & Usage</h3>
+            <p>The Extension processes data locally within your browser. Below is a detailed explanation of the
+                permissions required and how they are used:</p>
+
+            <div class="permission-box">
+                <span class="permission-name">activeTab</span>
+                <p><strong>Purpose:</strong> To scan the current page for installed tracking scripts (Meta Pixel, Google
+                    Tags, TikTok Pixel, Zalo Pixel).</p>
+                <p><strong>Data Usage:</strong> The Extension reads the HTML content of the active tab only when you
+                    interact with the extension or when the page loads to identify tracking codes.</p>
+            </div>
+
+            <div class="permission-box">
+                <span class="permission-name">webRequest</span>
+                <p><strong>Purpose:</strong> To detect network requests sent to ad platforms (e.g., requests to
+                    `facebook.com/tr`, `google-analytics.com`, `tiktok.com`).</p>
+                <p><strong>Data Usage:</strong> We inspect network request URLs to validate that tracking events are
+                    firing correctly and capturing the expected parameters. This analysis happens entirely on your
+                    device.</p>
+            </div>
+
+            <div class="permission-box">
+                <span class="permission-name">identity</span>
+                <p><strong>Purpose:</strong> To authenticate with the Google Tag Manager (GTM) API via OAuth2.</p>
+                <p><strong>Data Usage:</strong> This permission is required to obtain an access token on your behalf to
+                    list your existing GTM Accounts, Containers, and Workspaces. This enables you to easily select and
+                    configure the container you wish to inspect directly within the extension's settings. We only access
+                    your email address and container list for this functionality. This data remains local to your
+                    browser and is never shared with third parties.</p>
+            </div>
+
+            <div class="permission-box">
+                <span class="permission-name">storage</span>
+                <p><strong>Purpose:</strong> To save your user preferences (e.g., theme, selected platforms to scan).
+                </p>
+                <p><strong>Data Usage:</strong> Stored locally in your browser's extension storage.</p>
+            </div>
+
+            <h3>Data Security</h3>
+            <p>We do not transmit your data to any external servers. All pixel detection and validation logic runs
+                locally in your browser.</p>
+
+            <h3>Changes to This Policy</h3>
+            <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new
+                Privacy Policy on this page.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 P2P Digital. All rights reserved.</p>
+    </footer>
+
+</body>
+
+</html>
