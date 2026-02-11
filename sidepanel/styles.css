@@ -499,22 +499,29 @@ body {
 .event-timeline {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 8px;
 }
 
 .event-item {
-  padding: var(--spacing-md);
+  padding: 10px 12px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-sm);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.event-item:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-primary);
 }
 
 .event-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 2px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
 .event-name {
@@ -522,13 +529,30 @@ body {
   color: var(--text-primary);
 }
 
-.event-platform {
+.event-time {
   margin-left: auto;
-  flex-shrink: 0;
-  font-size: var(--font-size-xs);
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-weight: 500;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.event-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  margin-left: 24px;
+  /* Align with text, after icon */
+}
+
+/* Platform Badges - Compact */
+.event-platform {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .event-platform.meta {
@@ -554,11 +578,6 @@ body {
 .event-platform.linkedin {
   background: rgba(10, 102, 194, 0.15);
   color: #0a66c2;
-}
-
-.event-time {
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
 }
 
 .event-params {
@@ -696,6 +715,11 @@ body {
 
 [data-theme="dark"] .event-funnel-badge {
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+}
+
+/* ── Tip / Donate Section ── */
+.tip-section {
+  margin-top: 12px;
 }
 
 /* Settings */

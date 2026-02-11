@@ -7,7 +7,7 @@ export class PixelMonitor {
     this.session = null;
     this.tabId = null;
     this.filters = { platform: '', event: '' };
-    this.selectedEventsForDiff = [];
+
     this._eventsBound = false;
 
     // Platform dashboard URLs
@@ -98,12 +98,7 @@ export class PixelMonitor {
       }
     });
 
-    // Diff checkbox handler
-    document.getElementById('eventTimeline')?.addEventListener('change', (e) => {
-      if (e.target.classList.contains('diff-checkbox')) {
-        this.handleDiffCheckbox(e.target);
-      }
-    });
+
 
     // Close dataLayer modal
     document.getElementById('closeDataLayerModal')?.addEventListener('click', () => {
@@ -405,8 +400,6 @@ export class PixelMonitor {
     }
 
     container.innerHTML = events.slice().reverse().map((event, idx) => {
-      const realIdx = events.length - 1 - idx;
-      const isSelected = this.selectedEventsForDiff.includes(realIdx);
       const info = EventExplainer.getEvent(event.event);
       const isSystem = EventExplainer.isSystemEvent(event.event);
       const funnelStage = EventExplainer.getFunnelStage(event.event);
@@ -427,105 +420,25 @@ export class PixelMonitor {
       }
 
       return `
-      <div class="event-item ${isSelected ? 'diff-selected' : ''} ${isSystem ? 'event-system' : ''}">
+      <div class="event-item ${isSystem ? 'event-system' : ''}">
         <div class="event-header">
-          <label class="diff-label" title="Chọn để so sánh">
-            <input type="checkbox" class="diff-checkbox" data-idx="${realIdx}" ${isSelected ? 'checked' : ''}>
-          </label>
           <span class="event-icon">${icon}</span>
           <div class="event-name-group">
             <span class="event-name">${event.event}</span>
             <span class="event-vi-name">${viName}</span>
           </div>
-          <span class="event-platform ${event.platform}">${event.platform}</span>
+          <span class="event-time">${this.formatTime(event.timestamp)}</span>
         </div>
-        ${funnelStage ? `<span class="event-funnel-badge">${funnelStage}</span>` : ''}
+        
+        <div class="event-meta-row">
+           <span class="event-platform ${event.platform}">${event.platform}</span>
+           ${funnelStage ? `<span class="event-funnel-badge">${funnelStage}</span>` : ''}
+        </div>
+
         ${desc ? `<div class="event-desc">${desc}</div>` : ''}
-        <div class="event-time">${this.formatTime(event.timestamp)}</div>
         ${paramsHtml}
       </div>
     `}).join('');
-
-    // Show diff panel if 2 selected
-    if (this.selectedEventsForDiff.length === 2) {
-      this.renderDiffPanel(events);
-    } else {
-      const existing = document.getElementById('diffPanel');
-      if (existing) existing.remove();
-    }
-  }
-
-  handleDiffCheckbox(checkbox) {
-    const idx = parseInt(checkbox.dataset.idx);
-    if (checkbox.checked) {
-      if (this.selectedEventsForDiff.length >= 2) {
-        // Deselect oldest
-        this.selectedEventsForDiff.shift();
-      }
-      this.selectedEventsForDiff.push(idx);
-    } else {
-      this.selectedEventsForDiff = this.selectedEventsForDiff.filter(i => i !== idx);
-    }
-    this.renderTimeline();
-  }
-
-  renderDiffPanel(events) {
-    const [idxA, idxB] = this.selectedEventsForDiff;
-    const eventA = events[idxA];
-    const eventB = events[idxB];
-    if (!eventA || !eventB) return;
-
-    // Get all param keys
-    const paramsA = eventA.params || {};
-    const paramsB = eventB.params || {};
-    const allKeys = [...new Set([...Object.keys(paramsA), ...Object.keys(paramsB)])].sort();
-
-    let diffRows = allKeys.map(key => {
-      const valA = paramsA[key] !== undefined ? JSON.stringify(paramsA[key]) : '—';
-      const valB = paramsB[key] !== undefined ? JSON.stringify(paramsB[key]) : '—';
-      const isDiff = valA !== valB;
-      return `
-        <tr class="${isDiff ? 'diff-row-changed' : ''}">
-          <td class="diff-key">${key}</td>
-          <td class="diff-val">${valA}</td>
-          <td class="diff-val">${valB}</td>
-        </tr>
-      `;
-    }).join('');
-
-    const diffHtml = `
-      <div id="diffPanel" class="diff-panel">
-        <div class="diff-header">
-          <span>🔍 Event Comparison</span>
-          <button class="diff-close" onclick="document.getElementById('diffPanel').remove()">✕</button>
-        </div>
-        <table class="diff-table">
-          <thead>
-            <tr>
-              <th>Parameter</th>
-              <th>${eventA.event} <small>(${eventA.platform})</small></th>
-              <th>${eventB.event} <small>(${eventB.platform})</small></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="diff-key">event</td>
-              <td class="diff-val ${eventA.event !== eventB.event ? 'diff-changed' : ''}">${eventA.event}</td>
-              <td class="diff-val ${eventA.event !== eventB.event ? 'diff-changed' : ''}">${eventB.event}</td>
-            </tr>
-            <tr>
-              <td class="diff-key">platform</td>
-              <td class="diff-val ${eventA.platform !== eventB.platform ? 'diff-changed' : ''}">${eventA.platform}</td>
-              <td class="diff-val ${eventA.platform !== eventB.platform ? 'diff-changed' : ''}">${eventB.platform}</td>
-            </tr>
-            ${diffRows}
-          </tbody>
-        </table>
-      </div>
-    `;
-
-    const container = document.getElementById('eventTimeline');
-    container.insertAdjacentHTML('afterbegin', diffHtml);
   }
 
   // ═══════════════════════════════════════════════
