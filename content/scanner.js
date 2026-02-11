@@ -324,32 +324,47 @@
     // ── DataLayer Inspector handler ──
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.type === 'GET_DATALAYER') {
-            // Inject script into page context to read window.dataLayer
-            const script = document.createElement('script');
-            script.textContent = `
-                window.postMessage({
-                    type: 'PIXEL_INSPECTOR_DATALAYER',
-                    dataLayer: JSON.parse(JSON.stringify(window.dataLayer || []))
-                }, '*');
-            `;
-            document.documentElement.appendChild(script);
-            script.remove();
+            let responded = false;
 
-            // Listen for the response
+            // 1. Set up listener FIRST (before injecting script)
             const handler = (event) => {
                 if (event.source !== window) return;
                 if (event.data?.type === 'PIXEL_INSPECTOR_DATALAYER') {
                     window.removeEventListener('message', handler);
-                    sendResponse({ dataLayer: event.data.dataLayer });
+                    if (!responded) {
+                        responded = true;
+                        sendResponse({ dataLayer: event.data.dataLayer || [] });
+                    }
                 }
             };
             window.addEventListener('message', handler);
 
-            // Timeout fallback
+            // 2. THEN inject script into page context to read window.dataLayer
+            const script = document.createElement('script');
+            script.textContent = `
+                try {
+                    var dl = window.dataLayer || [];
+                    var safe = [];
+                    for (var i = 0; i < dl.length; i++) {
+                        try { safe.push(JSON.parse(JSON.stringify(dl[i]))); }
+                        catch(e) { safe.push({ _error: 'Non-serializable entry', index: i }); }
+                    }
+                    window.postMessage({ type: 'PIXEL_INSPECTOR_DATALAYER', dataLayer: safe }, '*');
+                } catch(e) {
+                    window.postMessage({ type: 'PIXEL_INSPECTOR_DATALAYER', dataLayer: [] }, '*');
+                }
+            `;
+            document.documentElement.appendChild(script);
+            script.remove();
+
+            // 3. Timeout fallback (only if not already responded)
             setTimeout(() => {
                 window.removeEventListener('message', handler);
-                sendResponse({ dataLayer: [] });
-            }, 2000);
+                if (!responded) {
+                    responded = true;
+                    sendResponse({ dataLayer: [] });
+                }
+            }, 3000);
 
             return true; // keep message channel open
         }
