@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Unified Pixel Inspector",
     "description": "Detect and debug tracking pixels/tags across Meta, TikTok, Google/GTM, and Zalo on any website",
-    "version": "3.1.0",
+    "version": "3.2.0",
     "author": "P2P Digital",
     "homepage_url": "https://github.com/vanhao1997/unified-pixel-inspector",
     "minimum_chrome_version": "116",

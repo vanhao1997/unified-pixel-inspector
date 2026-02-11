@@ -1,5 +1,7 @@
 import { SessionStore } from '../../lib/sessionStore.js';
 import { EventExplainer } from '../../lib/eventExplainer.js';
+import { ChecklistManager } from './ChecklistManager.js';
+import { EventValidator } from './EventValidator.js';
 
 export class PixelMonitor {
   constructor(ui) {
@@ -26,6 +28,7 @@ export class PixelMonitor {
       zalo: 'Zalo Pixel',
       linkedin: 'LinkedIn Insight Tag'
     };
+    this.checklistManager = new ChecklistManager(this.renderChecklist.bind(this));
   }
 
   async init() {
@@ -104,6 +107,22 @@ export class PixelMonitor {
     document.getElementById('closeDataLayerModal')?.addEventListener('click', () => {
       document.getElementById('dataLayerModal').style.display = 'none';
     });
+
+    // Checklist listeners
+    document.getElementById('checklistContainer')?.addEventListener('change', (e) => {
+      if (e.target.id === 'checklistTypeSelector') {
+        this.checklistManager.setType(e.target.value);
+        this.updateChecklist();
+      }
+    });
+
+    document.getElementById('checklistContainer')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('#resetChecklist');
+      if (btn) {
+        this.checklistManager.reset();
+        this.updateChecklist();
+      }
+    });
   }
 
   toggleCapture() {
@@ -131,6 +150,7 @@ export class PixelMonitor {
     this.renderDiagnostics();
     this.renderTimeline();
     this.renderCaptureState(this.session?.capturing);
+    this.updateChecklist();
   }
 
   renderCaptureState(capturing) {
@@ -392,8 +412,8 @@ export class PixelMonitor {
 
     if (events.length === 0) {
       container.innerHTML = `
-        <div class="empty-state">
-           <p style="color:var(--text-secondary)">No events captured</p>
+        <div class=\"empty-state\">
+           <p style=\"color:var(--text-secondary)\">No events captured</p>
         </div>
       `;
       return;
@@ -407,35 +427,57 @@ export class PixelMonitor {
       const viName = info?.vi || event.event;
       const desc = info?.desc || '';
 
+      // VALIDATION
+      const issues = EventValidator.validate(event);
+      const hasError = issues.some(i => i.type === 'error');
+      const hasWarning = issues.some(i => i.type === 'warning');
+
+      let badgeHtml = '';
+      if (hasError) badgeHtml = `<span class=\"validation-badge v-error\" title=\"${issues.length} Issues\">🔴</span>`;
+      else if (hasWarning) badgeHtml = `<span class=\"validation-badge v-warning\" title=\"${issues.length} Warnings\">⚠️</span>`;
+
+      let issuesHtml = '';
+      if (issues.length > 0) {
+        issuesHtml = `<div class=\"event-validation-issues\">
+          ${issues.map(iss => `<div class=\"issue-item ${iss.type === 'warning' ? 'warning' : ''}\">
+            <span class=\"issue-title\">${iss.icon || '⚠️'} ${iss.title}</span>
+            <span class=\"issue-msg\">${iss.message}</span>
+            <span class=\"issue-fix\">🔧 Fix: ${iss.fix}</span>
+          </div>`).join('')}
+        </div>`;
+      }
+
       // Format params with Vietnamese labels
       let paramsHtml = '';
       if (event.params && Object.keys(event.params).length > 0) {
         const explained = EventExplainer.explainParams(event.params);
-        paramsHtml = `<div class="event-params-explained">
-          ${explained.map(p => `<div class="param-row">
-            <span class="param-key" title="${p.desc}">${p.label}</span>
-            <span class="param-value">${this.truncateValue(p.value, 80)}</span>
+        paramsHtml = `<div class=\"event-params-explained\">
+          ${explained.map(p => `<div class=\"param-row\">
+            <span class=\"param-key\" title=\"${p.desc}\">${p.label}</span>
+            <span class=\"param-value\">${this.truncateValue(p.value, 80)}</span>
           </div>`).join('')}
         </div>`;
       }
 
       return `
-      <div class="event-item ${isSystem ? 'event-system' : ''}">
-        <div class="event-header">
-          <span class="event-icon">${icon}</span>
-          <div class="event-name-group">
-            <span class="event-name">${event.event}</span>
-            <span class="event-vi-name">${viName}</span>
+      <div class=\"event-item ${isSystem ? 'event-system' : ''}\">
+        ${badgeHtml}
+        <div class=\"event-header\">
+          <span class=\"event-icon\">${icon}</span>
+          <div class=\"event-name-group\">
+            <span class=\"event-name\">${event.event}</span>
+            <span class=\"event-vi-name\">${viName}</span>
           </div>
-          <span class="event-time">${this.formatTime(event.timestamp)}</span>
+          <span class=\"event-time\">${this.formatTime(event.timestamp)}</span>
         </div>
         
-        <div class="event-meta-row">
-           <span class="event-platform ${event.platform}">${event.platform}</span>
-           ${funnelStage ? `<span class="event-funnel-badge">${funnelStage}</span>` : ''}
+        <div class=\"event-meta-row\">
+           <span class=\"event-platform ${event.platform}\">${event.platform}</span>
+           ${funnelStage ? `<span class=\"event-funnel-badge\">${funnelStage}</span>` : ''}
         </div>
 
-        ${desc ? `<div class="event-desc">${desc}</div>` : ''}
+        ${issuesHtml}
+        ${desc ? `<div class=\"event-desc\">${desc}</div>` : ''}
         ${paramsHtml}
       </div>
     `}).join('');
@@ -531,5 +573,57 @@ export class PixelMonitor {
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  // ═══════════════════════════════════════════════
+  // CHECKLIST LOGIC
+  // ═══════════════════════════════════════════════
+
+  updateChecklist() {
+    if (!this.session?.events || !this.checklistManager) return;
+
+    // Silent reset then re-check all events
+    this.checklistManager.reset(true);
+
+    this.session.events.forEach(e => {
+      this.checklistManager.checkEvent(e.event, true);
+    });
+
+    this.checklistManager.render();
+  }
+
+  renderChecklist(type, steps) {
+    const container = document.getElementById('checklistContainer');
+    if (!container) return;
+
+    let html = `
+      <div class="checklist-header">
+        <select id="checklistTypeSelector" class="checklist-select">
+          <option value="ecommerce" ${type === 'ecommerce' ? 'selected' : ''}>E-commerce Flow</option>
+          <option value="lead_gen" ${type === 'lead_gen' ? 'selected' : ''}>Lead Gen Flow</option>
+        </select>
+        <button id="resetChecklist" class="btn-icon" title="Reset Checklist">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 4v6h-6"></path>
+            <path d="M1 20v-6h6"></path>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+            <path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="checklist-steps">
+    `;
+
+    steps.forEach(step => {
+      html += `
+        <div class="step-item ${step.done ? 'step-done' : ''}">
+          <div class="step-icon">${step.done ? '✅' : '⬜'}</div>
+          <span class="step-label">${step.label}</span>
+        </div>
+      `;
+    });
+    html += `</div>`;
+
+    container.innerHTML = html;
   }
 }
