@@ -30,6 +30,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             if (tabId) handleEventCaptured(tabId, message.data);
             break;
 
+        case 'PIXEL_GLOBAL_LOADED':
+            if (tabId) handleGlobalLoaded(tabId, message.data);
+            break;
+
         case 'GET_SESSION':
             if (tabId) {
                 // Get or Init session
@@ -158,6 +162,30 @@ async function handlePixelDetected(tabId, data) {
     updateBadge(tabId, issueCount);
 
     // Notify side panel
+    chrome.runtime.sendMessage({ type: 'SESSION_UPDATED', tabId, session }).catch(() => { });
+}
+
+async function handleGlobalLoaded(tabId, data) {
+    const { platform } = data;
+
+    await SessionStore.update(tabId, (s) => {
+        if (!s.platforms[platform]) {
+            s.platforms[platform] = {
+                pixelIds: [],
+                tags: [],
+                installed: false,
+                loaded: false,
+                fired: false,
+                errors: [],
+                warnings: []
+            };
+        }
+        s.platforms[platform].installed = true;
+        s.platforms[platform].loaded = true;
+    });
+
+    // Notify side panel to re-render
+    const session = await SessionStore.get(tabId);
     chrome.runtime.sendMessage({ type: 'SESSION_UPDATED', tabId, session }).catch(() => { });
 }
 

@@ -387,6 +387,54 @@
     }
 
     // ============================================
+    // GLOBALS BROADCAST (to content script)
+    // ============================================
+    function broadcastGlobals() {
+        const globals = {};
+        if (typeof window.fbq !== 'undefined') globals.meta = true;
+        if (typeof window.ttq !== 'undefined') globals.tiktok = true;
+        if (typeof window.dataLayer !== 'undefined') globals.google = true;
+        if (typeof window.gtag !== 'undefined') globals.google = true;
+        if (typeof window.ZaloSocialSDK !== 'undefined') globals.zalo = true;
+        if (typeof window.zaPixel !== 'undefined') globals.zalo = true;
+        if (typeof window.lintrk !== 'undefined') globals.linkedin = true;
+
+        window.postMessage({
+            type: 'PIXEL_INSPECTOR_GLOBALS',
+            globals: globals
+        }, '*');
+    }
+
+    // ============================================
+    // DATALAYER REQUEST HANDLER
+    // ============================================
+    window.addEventListener('message', (event) => {
+        if (event.source !== window) return;
+        if (event.data?.type === 'PIXEL_INSPECTOR_REQUEST_DATALAYER') {
+            try {
+                const dl = window.dataLayer || [];
+                const safe = [];
+                for (let i = 0; i < dl.length; i++) {
+                    try {
+                        safe.push(JSON.parse(JSON.stringify(dl[i])));
+                    } catch (e) {
+                        safe.push({ _error: 'Non-serializable entry', index: i });
+                    }
+                }
+                window.postMessage({
+                    type: 'PIXEL_INSPECTOR_DATALAYER',
+                    dataLayer: safe
+                }, '*');
+            } catch (e) {
+                window.postMessage({
+                    type: 'PIXEL_INSPECTOR_DATALAYER',
+                    dataLayer: []
+                }, '*');
+            }
+        }
+    });
+
+    // ============================================
     // INITIALIZATION
     // ============================================
     function initHooks() {
@@ -399,9 +447,11 @@
 
     // Run immediately and retry for late-loading scripts
     initHooks();
-    setTimeout(initHooks, 1000);
-    setTimeout(initHooks, 2500);
-    setTimeout(initHooks, 5000);
+    broadcastGlobals();
+
+    setTimeout(() => { initHooks(); broadcastGlobals(); }, 1000);
+    setTimeout(() => { initHooks(); broadcastGlobals(); }, 2500);
+    setTimeout(() => { initHooks(); broadcastGlobals(); }, 5000);
 
     // Also listen for DOM changes to catch dynamically loaded pixels
     if (typeof MutationObserver !== 'undefined') {
@@ -411,6 +461,7 @@
             if (now - lastHookTime > 2000) {
                 lastHookTime = now;
                 initHooks();
+                broadcastGlobals();
             }
         });
 

@@ -179,16 +179,10 @@
     }
 
     // Check for global functions
+    // NOTE: Content script runs in isolated world, cannot access page globals.
+    // Globals are detected by hooks.js (page context) and sent via postMessage.
     function checkGlobals() {
-        const detected = {};
-
-        for (const [key, platform] of Object.entries(platformPatterns)) {
-            if (window[platform.globalCheck]) {
-                detected[key] = { loaded: true };
-            }
-        }
-
-        return detected;
+        return {}; // Always empty from content script — hooks.js handles this
     }
 
     // Additional scan for Zalo widget OAID from DOM elements
@@ -228,23 +222,37 @@
         (document.head || document.documentElement).appendChild(script);
     }
 
-    // Listen for messages from injected hooks
+    // Listen for messages from injected hooks (events + globals + dataLayer)
     window.addEventListener('message', (event) => {
         if (event.source !== window) return;
         if (!event.data || !event.data.type) return;
 
+        // Captured pixel events from hooks
         if (event.data.type === 'PIXEL_INSPECTOR_EVENT') {
             chrome.runtime.sendMessage({
                 type: 'EVENT_CAPTURED',
                 data: event.data.payload
             });
         }
+
+        // Globals broadcast from hooks.js (page context)
+        if (event.data.type === 'PIXEL_INSPECTOR_GLOBALS') {
+            const globals = event.data.globals || {};
+            for (const [platform, loaded] of Object.entries(globals)) {
+                if (loaded) {
+                    chrome.runtime.sendMessage({
+                        type: 'PIXEL_GLOBAL_LOADED',
+                        data: { platform, loaded: true }
+                    });
+                }
+            }
+        }
     });
 
     // Main scan function
     function performScan() {
         const scriptDetections = scanScripts();
-        const globalDetections = checkGlobals();
+        const globalDetections = checkGlobals(); // Always empty from content script — hooks.js handles globals
         const zaloWidgetData = scanZaloWidget();
 
         // Merge results
@@ -276,14 +284,14 @@
 
         for (const platform of allPlatforms) {
             const scriptData = scriptDetections[platform] || {};
-            const globalData = globalDetections[platform] || {};
+            const globalData = globalDetections[platform] || {}; // This will be empty
 
             chrome.runtime.sendMessage({
                 type: 'PIXEL_DETECTED',
                 data: {
                     platform,
                     pixelId: scriptData.pixelIds?.[0] || null,
-                    status: globalData.loaded ? 'loaded' : 'installed',
+                    status: globalData.loaded ? 'loaded' : 'installed', // status will primarily be 'installed' from content script
                     source: scriptData.source || 'global_check',
                     allPixelIds: scriptData.pixelIds || [],
                     tags: scriptData.tags || []
@@ -302,6 +310,10 @@
         injectHooks();
         setTimeout(performScan, 500);
     }
+
+    // Delayed re-scans to catch late-loading pixels
+    setTimeout(performScan, 1500);
+    setTimeout(performScan, 3000);
 
     // Re-scan on SPA navigation
     const originalPushState = history.pushState;
@@ -322,11 +334,12 @@
     });
 
     // ── DataLayer Inspector handler ──
+    // Uses postMessage to hooks.js (page context) instead of inline script (CSP-safe)
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.type === 'GET_DATALAYER') {
             let responded = false;
 
-            // 1. Set up listener FIRST (before injecting script)
+            // 1. Set up listener for response from hooks.js
             const handler = (event) => {
                 if (event.source !== window) return;
                 if (event.data?.type === 'PIXEL_INSPECTOR_DATALAYER') {
@@ -339,25 +352,10 @@
             };
             window.addEventListener('message', handler);
 
-            // 2. THEN inject script into page context to read window.dataLayer
-            const script = document.createElement('script');
-            script.textContent = `
-                try {
-                    var dl = window.dataLayer || [];
-                    var safe = [];
-                    for (var i = 0; i < dl.length; i++) {
-                        try { safe.push(JSON.parse(JSON.stringify(dl[i]))); }
-                        catch(e) { safe.push({ _error: 'Non-serializable entry', index: i }); }
-                    }
-                    window.postMessage({ type: 'PIXEL_INSPECTOR_DATALAYER', dataLayer: safe }, '*');
-                } catch(e) {
-                    window.postMessage({ type: 'PIXEL_INSPECTOR_DATALAYER', dataLayer: [] }, '*');
-                }
-            `;
-            document.documentElement.appendChild(script);
-            script.remove();
+            // 2. Request dataLayer from hooks.js via postMessage (page context, bypasses CSP)
+            window.postMessage({ type: 'PIXEL_INSPECTOR_REQUEST_DATALAYER' }, '*');
 
-            // 3. Timeout fallback (only if not already responded)
+            // 3. Timeout fallback
             setTimeout(() => {
                 window.removeEventListener('message', handler);
                 if (!responded) {
