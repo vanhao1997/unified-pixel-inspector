@@ -442,26 +442,22 @@ body {
   padding: var(--spacing-md);
   border-radius: var(--border-radius);
   font-size: var(--font-size-sm);
+  margin-bottom: 6px;
 }
 
 .diagnostic-item.success {
   background: var(--success-bg);
-  color: var(--success);
+  border-left: 3px solid var(--success);
 }
 
 .diagnostic-item.warning {
   background: var(--warning-bg);
-  color: var(--warning);
+  border-left: 3px solid var(--warning);
 }
 
 .diagnostic-item.error {
   background: var(--error-bg);
-  color: var(--error);
-}
-
-.diagnostic-item svg {
-  flex-shrink: 0;
-  margin-top: 2px;
+  border-left: 3px solid var(--error);
 }
 
 /* Timeline */
@@ -2503,4 +2499,473 @@ body {
 .btn.danger:hover {
   background: var(--error);
   color: white;
+}
+
+/* ═══════════════════════════════════════════════ */
+/* V3 FEATURES                                     */
+/* ═══════════════════════════════════════════════ */
+
+/* ── Enhanced Diagnostics ── */
+.diagnostic-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--border-radius);
+  margin-bottom: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.diagnostic-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.diagnostic-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.diagnostic-msg {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.diagnostic-tip {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.diagnostic-item.info {
+  background: var(--info-bg);
+  border-left: 3px solid var(--info);
+}
+
+/* ── Copy ID & Dashboard Buttons ── */
+.pixel-ids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.pixel-id-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-secondary);
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.pixel-id-chip code {
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+.copy-id-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.6;
+  transition: opacity 0.15s, transform 0.15s;
+  line-height: 1;
+}
+
+.copy-id-btn:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.platform-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.open-dashboard-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  padding: 2px 6px;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.7;
+  transition: all 0.15s;
+}
+
+.open-dashboard-btn:hover {
+  opacity: 1;
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+}
+
+/* ── btn-outline ── */
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-outline:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background: var(--info-bg);
+}
+
+/* ── DataLayer Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.15s ease;
+}
+
+.modal-panel {
+  background: var(--bg-primary);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.2s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.modal-body {
+  overflow-y: auto;
+  padding: 12px;
+  flex: 1;
+}
+
+/* DataLayer entries */
+.dl-entry {
+  margin-bottom: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+}
+
+.dl-entry summary {
+  cursor: pointer;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  background: var(--bg-secondary);
+  transition: background 0.15s;
+}
+
+.dl-entry summary:hover {
+  background: var(--bg-hover);
+}
+
+.dl-index {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  min-width: 24px;
+}
+
+.dl-event-name {
+  font-weight: 500;
+  color: var(--accent-primary);
+}
+
+.dl-internal summary {
+  opacity: 0.6;
+}
+
+.dl-json {
+  padding: 8px 12px;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: auto;
+  border-top: 1px solid var(--border-color);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ── Event Diff ── */
+.diff-label {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.diff-checkbox {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--accent-primary);
+}
+
+.event-item.diff-selected {
+  border-left: 3px solid var(--accent-primary);
+  background: var(--info-bg);
+}
+
+.diff-panel {
+  background: var(--bg-primary);
+  border: 2px solid var(--accent-primary);
+  border-radius: var(--border-radius);
+  margin-bottom: 12px;
+  overflow: hidden;
+  animation: slideUp 0.2s ease;
+}
+
+.diff-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--accent-primary);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.diff-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.diff-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.diff-table th {
+  background: var(--bg-secondary);
+  padding: 6px 8px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.diff-table th small {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.diff-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+
+.diff-key {
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  width: 30%;
+}
+
+.diff-val {
+  color: var(--text-primary);
+}
+
+.diff-row-changed {
+  background: var(--warning-bg);
+}
+
+.diff-row-changed .diff-val {
+  font-weight: 600;
+}
+
+.diff-changed {
+  color: var(--warning) !important;
+  font-weight: 600;
+}
+
+/* ── Tip / Donate Section ── */
+.tip-section {
+  margin-top: 12px;
+}
+
+.tip-card {
+  background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%);
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+[data-theme="dark"] .tip-card {
+  background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+  border-color: #92400e;
+}
+
+.tip-emoji {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.tip-text h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tip-text p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.btn-tip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.btn-tip:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+/* QR Code in Tip Section */
+.tip-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.qr-image {
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  border: 3px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.qr-image:hover {
+  transform: scale(1.05);
+}
+
+.qr-caption {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.tip-note {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* ── Export Timeline Button ── */
+#exportTimeline {
+  font-size: 12px;
 }

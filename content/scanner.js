@@ -321,4 +321,38 @@
         setTimeout(performScan, 1000);
     });
 
+    // ── DataLayer Inspector handler ──
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.type === 'GET_DATALAYER') {
+            // Inject script into page context to read window.dataLayer
+            const script = document.createElement('script');
+            script.textContent = `
+                window.postMessage({
+                    type: 'PIXEL_INSPECTOR_DATALAYER',
+                    dataLayer: JSON.parse(JSON.stringify(window.dataLayer || []))
+                }, '*');
+            `;
+            document.documentElement.appendChild(script);
+            script.remove();
+
+            // Listen for the response
+            const handler = (event) => {
+                if (event.source !== window) return;
+                if (event.data?.type === 'PIXEL_INSPECTOR_DATALAYER') {
+                    window.removeEventListener('message', handler);
+                    sendResponse({ dataLayer: event.data.dataLayer });
+                }
+            };
+            window.addEventListener('message', handler);
+
+            // Timeout fallback
+            setTimeout(() => {
+                window.removeEventListener('message', handler);
+                sendResponse({ dataLayer: [] });
+            }, 2000);
+
+            return true; // keep message channel open
+        }
+    });
+
 })();
