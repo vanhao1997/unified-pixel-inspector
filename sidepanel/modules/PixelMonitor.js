@@ -1,4 +1,5 @@
 import { SessionStore } from '../../lib/sessionStore.js';
+import { EventExplainer } from '../../lib/eventExplainer.js';
 
 export class PixelMonitor {
   constructor(ui) {
@@ -406,17 +407,42 @@ export class PixelMonitor {
     container.innerHTML = events.slice().reverse().map((event, idx) => {
       const realIdx = events.length - 1 - idx;
       const isSelected = this.selectedEventsForDiff.includes(realIdx);
+      const info = EventExplainer.getEvent(event.event);
+      const isSystem = EventExplainer.isSystemEvent(event.event);
+      const funnelStage = EventExplainer.getFunnelStage(event.event);
+      const icon = info?.icon || '📡';
+      const viName = info?.vi || event.event;
+      const desc = info?.desc || '';
+
+      // Format params with Vietnamese labels
+      let paramsHtml = '';
+      if (event.params && Object.keys(event.params).length > 0) {
+        const explained = EventExplainer.explainParams(event.params);
+        paramsHtml = `<div class="event-params-explained">
+          ${explained.map(p => `<div class="param-row">
+            <span class="param-key" title="${p.desc}">${p.label}</span>
+            <span class="param-value">${this.truncateValue(p.value, 80)}</span>
+          </div>`).join('')}
+        </div>`;
+      }
+
       return `
-      <div class="event-item ${isSelected ? 'diff-selected' : ''}">
+      <div class="event-item ${isSelected ? 'diff-selected' : ''} ${isSystem ? 'event-system' : ''}">
         <div class="event-header">
           <label class="diff-label" title="Chọn để so sánh">
             <input type="checkbox" class="diff-checkbox" data-idx="${realIdx}" ${isSelected ? 'checked' : ''}>
           </label>
-          <span class="event-name">${event.event}</span>
+          <span class="event-icon">${icon}</span>
+          <div class="event-name-group">
+            <span class="event-name">${event.event}</span>
+            <span class="event-vi-name">${viName}</span>
+          </div>
           <span class="event-platform ${event.platform}">${event.platform}</span>
         </div>
+        ${funnelStage ? `<span class="event-funnel-badge">${funnelStage}</span>` : ''}
+        ${desc ? `<div class="event-desc">${desc}</div>` : ''}
         <div class="event-time">${this.formatTime(event.timestamp)}</div>
-        ${event.params ? `<pre class="event-params">${JSON.stringify(event.params, null, 2)}</pre>` : ''}
+        ${paramsHtml}
       </div>
     `}).join('');
 
@@ -536,6 +562,12 @@ export class PixelMonitor {
 
   formatTime(timestamp) {
     return new Date(timestamp).toLocaleTimeString();
+  }
+
+  truncateValue(value, maxLen) {
+    if (!value) return '';
+    const str = String(value);
+    return str.length > maxLen ? str.substring(0, maxLen) + '…' : str;
   }
 
   exportJson() {
