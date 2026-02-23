@@ -161,12 +161,3 @@ Tôi chứng nhận rằng extension này:
 **Privacy Policy URL:** https://github.com/vanhao1997/unified-pixel-inspector/blob/main/PRIVACY_POLICY.md
 
 ---
-
-## Checklist trước khi submit
-
-- [ ] Điền email liên hệ trong thẻ Tài khoản
-- [ ] Xác minh email
-- [ ] Copy các nội dung trên vào thẻ Phương thức bảo vệ quyền riêng tư
-- [ ] Tick checkbox chứng nhận tuân thủ chính sách
-- [ ] Upload ảnh store_assets/
-- [ ] Submit để review
