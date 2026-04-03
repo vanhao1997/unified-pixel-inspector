@@ -134,6 +134,18 @@ Quyền này CHỈ đọc (read-only), KHÔNG chặn hay sửa đổi bất kỳ
 
 ---
 
+## 9. Lý do sử dụng quyền `identity`
+
+```
+Quyền identity được sử dụng để:
+
+1. Thực hiện luồng đăng nhập OAuth2 thông qua Google.
+2. Xin quyền "https://www.googleapis.com/auth/tagmanager.edit.containers" để hỗ trợ tính năng xuất/đồng bộ cấu hình với Google Tag Manager.
+3. Không bắt buộc, chỉ yêu cầu khi người dùng chủ động click tính năng yêu cầu Authorization.
+```
+
+---
+
 ## 9. Chứng nhận tuân thủ chính sách
 
 Tôi chứng nhận rằng extension này:

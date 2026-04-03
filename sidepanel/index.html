@@ -79,6 +79,14 @@
         </svg>
         Settings
       </button>
+      <button class="tab" data-tab="guide">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        Guide
+      </button>
     </nav>
 
     <!-- Content -->
@@ -629,6 +637,66 @@
           <p class="tip-note">💡 Extension này hoàn toàn miễn phí và không giới hạn tính năng.</p>
         </div>
       </section>
+      <!-- Guide Tab -->
+      <section id="guideTab" class="tab-content">
+        <div class="guide-container">
+          <div class="guide-header">
+            <h2>📘 Hướng dẫn sử dụng</h2>
+            <p>Làm chủ Unified Pixel Inspector trong 5 phút</p>
+          </div>
+
+          <!-- Feature 1: Scan -->
+          <div class="guide-card">
+            <h3>1. Scan & Detected Platforms</h3>
+            <p>Ngay khi mở extension, tab <strong>Scan</strong> sẽ hiển thị danh sách các platform (Meta, TikTok,
+              GTM...) được phát hiện.</p>
+            <ul>
+              <li>✅ <strong>Firing:</strong> Pixel hoạt động tốt.</li>
+              <li>⚠️ <strong>Loaded:</strong> Script tải nhưng chưa bắn event.</li>
+              <li>📋 <strong>Copy ID:</strong> Click icon copy để lấy Pixel ID.</li>
+            </ul>
+          </div>
+
+          <!-- Feature 2: Timeline -->
+          <div class="guide-card">
+            <h3>2. Timeline & Event Monitoring</h3>
+            <p>Chuyển qua tab <strong>Timeline</strong> để xem sự kiện thời gian thực.</p>
+            <ul>
+              <li>Interact trên web, sự kiện sẽ hiện ở đây.</li>
+              <li>Click vào sự kiện để xem chi tiết tham số (value, currency, content_ids).</li>
+              <li>🔴/⚠️: Báo lỗi logic hoặc thiếu tham số quan trọng.</li>
+            </ul>
+          </div>
+
+          <!-- Feature 3: Guided Testing -->
+          <div class="guide-card">
+            <h3>3. Guided Testing (Checklist)</h3>
+            <p>Dùng checklist để test flow chuẩn (E-commerce / Lead Gen).</p>
+            <ol>
+              <li>Chọn loại website ở dropdown (VD: E-commerce).</li>
+              <li>Thực hiện hành động: Xem hàng -> Thêm giỏ -> Mua hàng.</li>
+              <li>Các bước sẽ tự động tick ✅ khi sự kiện tương ứng được bắn.</li>
+            </ol>
+          </div>
+
+          <!-- Feature 4: Setup (GTM) -->
+          <div class="guide-card">
+            <h3>4. Setup & GTM</h3>
+            <p>Tab <strong>Setup</strong> giúp tạo code tracking và đẩy thẳng lên GTM.</p>
+            <ul>
+              <li>Kết nối tài khoản GTM trong Settings.</li>
+              <li>Chọn hành động (VD: Click nút Mua).</li>
+              <li>Bấm "Deploy to GTM" để tạo Tag/Trigger tự động.</li>
+            </ul>
+          </div>
+
+          <div class="guide-footer" style="text-align: center; margin-top: 24px; opacity: 0.7; font-size: 12px;">
+            <p>Phiên bản 3.2.0 - <span id="openSupportLink" style="text-decoration: underline; cursor: pointer;">Hỗ trợ
+                & Góp ý</span></p>
+          </div>
+        </div>
+      </section>
+
     </main>
 
     <!-- DataLayer Modal -->

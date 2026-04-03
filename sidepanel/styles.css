@@ -3240,3 +3240,57 @@ body {
     border: 1px solid rgba(0,0,0,0.1);
 }
 
+
+/* Guide Tab Styles */
+.guide-container {
+  padding: 16px;
+  padding-bottom: 80px; /* Space for footer */
+}
+.guide-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.guide-header h2 {
+  font-size: 20px;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+.guide-header p {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.guide-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.guide-card h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+.guide-card p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.guide-card ul, .guide-card ol {
+  padding-left: 20px;
+  margin: 0;
+}
+.guide-card li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+
+.guide-footer { margin-top: 16px; border-top: 1px dashed var(--border); padding-top: 16px; }
+
